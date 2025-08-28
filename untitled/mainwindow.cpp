@@ -218,19 +218,14 @@ void MainWindow::onDeleteAt()
     }
 }
 
-void MainWindow::onTraverseLinkedList()
-{
-    LinkedList *list = currentListFromTab(tabWidget);
-    if (!list) return;
+void MainWindow::onTraverseLinkedList() 
+{ 
+    // 获取当前标签页的CanvasWidget
+    CanvasWidget *canvas = qobject_cast<CanvasWidget*>(tabWidget->currentWidget());
+    if (!canvas) return;
 
-    QList<NodeVisual> nodes = list->visualNodes();
-    QString result = "链表遍历结果:\n";
-    for (int i = 0; i < nodes.size(); ++i) {
-        result += QString("节点 %1: %2\n").arg(i).arg(nodes[i].first);
-    }
-    result += "遍历完成\n";
-
-    QMessageBox::information(this, "链表遍历", result);
+    // 启动链表节点高亮遍历动画
+    canvas->startLinkedListTraversal();
 }
 
 // ==================== 栈 ====================

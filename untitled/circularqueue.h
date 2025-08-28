@@ -27,17 +27,20 @@ public:
     bool isEmpty() const;
     bool isFull() const;
     int size() const;
-    int capacity() const { return arr.size(); }
+    // 修改容量接口：返回用户指定的容量n，而非数组大小
+    int capacity() const { return cap; }
+    // 添加获取实际存储大小接口（n+1）
+    int bufferSize() const { return arr.size(); }
 
 private:
-    QVector<int> arr;      // 存储队列元素
+    QVector<int> arr;      // 存储队列元素（大小为cap+1）
     int frontIdx;          // 队头索引
     int rearIdx;           // 队尾索引
     int count;             // 当前元素数量
-    int cap;               // 队列容量
+    int cap;               // 用户指定的容量n
 
-    // 计算下一个索引（循环逻辑）
-    int nextIndex(int idx) const { return (idx + 1) % cap; }
+    // 添加nextIndex函数声明
+    int nextIndex(int idx) const;
 
 public:
     // 添加获取索引的接口（仅用于可视化）
