@@ -1,0 +1,16 @@
+release/canvas.o
+release/linkedlist.o
+release/main.o
+release/mainwindow.o
+release/stack.o
+release/circularqueue.o
+release/binarysearchtree.o
+release/treestructure.o
+release/moc_canvas.o
+release/moc_circularqueue.o
+release/moc_datastructure.o
+release/moc_linkedlist.o
+release/moc_mainwindow.o
+release/moc_stack.o
+release/moc_treestructure.o
+release/moc_binarysearchtree.o
