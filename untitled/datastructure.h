@@ -4,6 +4,7 @@
 #include <QObject>
 #include <QList>
 #include <QPair>
+#include <QVector>
 
 // 可视化节点：first = 值, second = 下一个节点索引 (-1 表示 null)
 typedef QPair<int, int> NodeVisual;
@@ -24,6 +25,26 @@ public:
 
 signals:
     void changed(); // 数据变化信号
+
+protected:
+    void emitChanged() { emit changed(); }
+};
+
+// 树结构接口类
+class TreeStructure : public QObject
+{
+    Q_OBJECT
+public:
+    explicit TreeStructure(QObject *parent = nullptr);
+    virtual ~TreeStructure() = default;
+
+    virtual void insertValue(int value) = 0;
+    virtual void removeValue(int value) = 0;
+    virtual bool contains(int value) const = 0;
+    virtual QList<QVector<int>> visualNodes() const = 0;
+
+signals:
+    void changed(); // 与DataStructure保持一致的信号名称
 
 protected:
     void emitChanged() { emit changed(); }

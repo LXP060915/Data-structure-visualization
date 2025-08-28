@@ -12,5 +12,4 @@ debug/moc_datastructure.o
 debug/moc_linkedlist.o
 debug/moc_mainwindow.o
 debug/moc_stack.o
-debug/moc_treestructure.o
 debug/moc_binarysearchtree.o

@@ -1,19 +1,25 @@
 #include "binarysearchtree.h"
+#include "datastructure.h"
 
 BinarySearchTree::BinarySearchTree(QObject *parent) : TreeStructure(parent), root(nullptr)
 {
 }
 
+BinarySearchTree::~BinarySearchTree()
+{
+    clear();
+}
+
 void BinarySearchTree::insertValue(int value)
 {
     insertRecursive(root, value);
-    emit dataChanged();
+    emit changed();
 }
 
 void BinarySearchTree::removeValue(int value)
 {
     if (removeRecursive(root, value)) {
-        emit dataChanged();
+        emit changed();
     }
 }
 
@@ -32,7 +38,7 @@ QList<QVector<int>> BinarySearchTree::visualNodes() const
 {
     nodeData.clear();
     int currentIndex = 0;
-    collectNodes(root, -1, currentIndex);
+    collectNodes(root, nodeData, currentIndex, -1);
     return nodeData;
 }
 
@@ -74,21 +80,37 @@ BinarySearchTree::Node *BinarySearchTree::findMin(Node *node) const
     return node;
 }
 
-void BinarySearchTree::collectNodes(Node *node, int parentIndex, int &currentIndex) const
+void BinarySearchTree::collectNodes(Node *node, QList<QVector<int>> &nodes, int &index, int parentIndex) const
 {
     if (!node) return;
-    int currentNodeIndex = currentIndex++;
+    int currentNodeIndex = index++;
     // 存储节点数据: [值, 父节点索引, 左子节点索引, 右子节点索引]
     QVector<int> nodeInfo = {node->value, parentIndex, -1, -1};
-    nodeData.append(nodeInfo);
+    nodes.append(nodeInfo);
 
     // 递归处理左右子树
     if (node->left) {
-        nodeData[currentNodeIndex][2] = currentIndex; // 更新左子节点索引
-        collectNodes(node->left, currentNodeIndex, currentIndex);
+        nodes[currentNodeIndex][2] = index; // 更新左子节点索引
+        collectNodes(node->left, nodes, index, currentNodeIndex);
     }
     if (node->right) {
-        nodeData[currentNodeIndex][3] = currentIndex; // 更新右子节点索引
-        collectNodes(node->right, currentNodeIndex, currentIndex);
+        nodes[currentNodeIndex][3] = index; // 更新右子节点索引
+        collectNodes(node->right, nodes, index, currentNodeIndex);
+    }
+}
+
+void BinarySearchTree::clear()
+{
+    clearRecursive(root);
+    root = nullptr;
+    emit changed();
+}
+
+void BinarySearchTree::clearRecursive(Node *node)
+{
+    if (node) {
+        clearRecursive(node->left);
+        clearRecursive(node->right);
+        delete node;
     }
 }

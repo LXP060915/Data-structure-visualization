@@ -13,8 +13,8 @@ SOURCES += \
     linkedlist.cpp \
     main.cpp \
     mainwindow.cpp \
-    stack.cpp\
-    circularqueue.cpp\
+    stack.cpp \
+    circularqueue.cpp \
     binarysearchtree.cpp \
     treestructure.cpp
 
@@ -25,9 +25,7 @@ HEADERS += \
     linkedlist.h \
     mainwindow.h \
     stack.h \
-    treestructure.h \
-    binarysearchtree.h \
-    circularqueue.h
+    binarysearchtree.h
 
 FORMS += \
     mainwindow.ui

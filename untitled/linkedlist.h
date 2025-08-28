@@ -16,7 +16,7 @@ public:
     void removeAt(int pos) override;
     QList<NodeVisual> visualNodes() const override;
 
-    // ✅ 把 clear 改为 public
+
     void clear() override;
 
 private:

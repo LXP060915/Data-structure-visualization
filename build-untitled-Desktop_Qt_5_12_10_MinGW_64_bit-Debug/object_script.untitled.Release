@@ -12,5 +12,4 @@ release/moc_datastructure.o
 release/moc_linkedlist.o
 release/moc_mainwindow.o
 release/moc_stack.o
-release/moc_treestructure.o
 release/moc_binarysearchtree.o

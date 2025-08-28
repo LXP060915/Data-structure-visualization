@@ -48,15 +48,31 @@ void CanvasWidget::paintEvent(QPaintEvent * /*event*/) {
         int totalHeight = n * nodeH + (n - 1) * gap;
         int x = w / 2 - nodeW / 2;
         int y = h / 2 - totalHeight / 2;
-
+    
+        // 添加容量显示
+        Stack* stack = dynamic_cast<Stack*>(ds);
+        QString capacityText = QString("容量: %1/%2").arg(n).arg(stack->capacity());
+        QRect capacityRect(x, y - 55, nodeW, 25);
+        p.drawText(capacityRect, Qt::AlignCenter, capacityText);
+    
         QRect topLabelRect(x, y - 30, nodeW, 25);
         p.drawText(topLabelRect, Qt::AlignCenter, "栈顶");
-
+    
         QRect bottomLabelRect(x, y + totalHeight + 5, nodeW, 25);
         p.drawText(bottomLabelRect, Qt::AlignCenter, "栈底");
-
+    
         for (int i = 0; i < nodes.size(); ++i) {
             QRect r(x, y + (n - 1 - i) * (nodeH + gap), nodeW, nodeH);
+            
+            // 栈满时所有节点变橙色，否则栈顶红色、其他节点灰色
+            QColor fillColor;
+            if (stack->isFull()) {
+                fillColor = QColor(255, 165, 0); // 橙色
+            } else {
+                fillColor = (i == 0) ? QColor(255, 0, 0) : QColor(240, 240, 240);
+            }
+            p.fillRect(r, fillColor);
+            
             p.drawRoundedRect(r, 8, 8);
             QString txt = QString::number(nodes[i].first);
             p.drawText(r, Qt::AlignCenter, txt);

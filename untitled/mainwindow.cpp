@@ -65,6 +65,8 @@ MainWindow::MainWindow(QWidget *parent)
     connect(actionPop, &QAction::triggered, this, &MainWindow::onPop);
     connect(actEnqueue, &QAction::triggered, this, &MainWindow::onEnqueue);
     connect(actDequeue, &QAction::triggered, this, &MainWindow::onDequeue);
+    connect(actNewCustomQueue, &QAction::triggered, this, &MainWindow::onNewCustomCapacityQueueInstance);
+    connect(actionNewQueue, &QAction::triggered, this, &MainWindow::onNewCircularQueueInstance);
 
     // 创建默认链表实例
     onNewInstance();
@@ -142,6 +144,8 @@ static LinkedList* currentListFromTab(QTabWidget *tabs) {
     return qobject_cast<LinkedList*>(c->dataStructure());
 }
 
+
+// ==================== 链表 ====================
 void MainWindow::onNewInstance()
 {
     // First create canvas with temporary null data structure
@@ -151,18 +155,6 @@ void MainWindow::onNewInstance()
     // Set the data structure for the canvas
     canvas->setDataStructure(list);
     int idx = tabWidget->addTab(canvas, QString("链表_%1").arg(++listCount));
-    tabWidget->setCurrentIndex(idx);
-}
-
-void MainWindow::onNewStackInstance()
-{
-    // First create canvas with temporary null data structure
-    CanvasWidget *canvas = new CanvasWidget(nullptr);
-    // Then create stack with canvas as parent
-    Stack *stack = new Stack(canvas);
-    // Set the data structure for the canvas
-    canvas->setDataStructure(stack);
-    int idx = tabWidget->addTab(canvas, QString("栈_%1").arg(++stackCount));
     tabWidget->setCurrentIndex(idx);
 }
 
@@ -226,6 +218,43 @@ void MainWindow::onDeleteAt()
     }
 }
 
+void MainWindow::onTraverseLinkedList()
+{
+    LinkedList *list = currentListFromTab(tabWidget);
+    if (!list) return;
+
+    QList<NodeVisual> nodes = list->visualNodes();
+    QString result = "链表遍历结果:\n";
+    for (int i = 0; i < nodes.size(); ++i) {
+        result += QString("节点 %1: %2\n").arg(i).arg(nodes[i].first);
+    }
+    result += "遍历完成\n";
+
+    QMessageBox::information(this, "链表遍历", result);
+}
+
+// ==================== 栈 ====================
+
+void MainWindow::onNewStackInstance()
+{
+    // First get capacity from user
+    bool ok;
+    int capacity = QInputDialog::getInt(
+        this, "创建栈", "请输入栈容量:",
+        5, 1, 100, 1, &ok
+    );
+    if (!ok) return;
+
+    // Then create canvas with temporary null data structure
+    CanvasWidget *canvas = new CanvasWidget(nullptr);
+    // Create stack with capacity AND canvas as parent
+    Stack *stack = new Stack(capacity, canvas);
+    // Set the data structure for the canvas
+    canvas->setDataStructure(stack);
+    int idx = tabWidget->addTab(canvas, QString("栈_%1").arg(++stackCount));
+    tabWidget->setCurrentIndex(idx);
+}
+
 void MainWindow::onPush()
 {
     DataStructure *ds = currentDataStructureFromTab(tabWidget);
@@ -240,9 +269,13 @@ void MainWindow::onPush()
     bool ok = false;
     int v = QInputDialog::getInt(this, "Push", "值:", 0, -2147483647, 2147483647, 1, &ok);
     if (ok) {
-        stack->push(v);
-        CanvasWidget *canvas = qobject_cast<CanvasWidget*>(tabWidget->currentWidget());
-        if (canvas) canvas->update();
+        if (stack->isFull()) {
+            QMessageBox::warning(this, "操作失败", "栈满，无法Push!");
+        } else {
+            stack->push(v);
+            CanvasWidget *canvas = qobject_cast<CanvasWidget*>(tabWidget->currentWidget());
+            if (canvas) canvas->update();
+        }
     }
 }
 
@@ -266,22 +299,79 @@ void MainWindow::onPop()
     if (canvas) canvas->update();
 }
 
-void MainWindow::onTraverseLinkedList()
+// ==================== 循环队列 ====================
+// 循环队列实例创建
+void MainWindow::onNewCircularQueueInstance()
 {
-    LinkedList *list = currentListFromTab(tabWidget);
-    if (!list) return;
-
-    QList<NodeVisual> nodes = list->visualNodes();
-    QString result = "链表遍历结果:\n";
-    for (int i = 0; i < nodes.size(); ++i) {
-        result += QString("节点 %1: %2\n").arg(i).arg(nodes[i].first);
-    }
-    result += "遍历完成\n";
-
-    QMessageBox::information(this, "链表遍历", result);
+    CanvasWidget *canvas = new CanvasWidget(nullptr);
+    CircularQueue *queue = new CircularQueue(5, canvas); // 容量为5的循环队列
+    canvas->setDataStructure(queue);
+    int idx = tabWidget->addTab(canvas, QString("循环队列_%1").arg(++queueCount));
+    tabWidget->setCurrentIndex(idx);
 }
 
-// ==================== 截图功能 ====================
+// 入队操作
+void MainWindow::onEnqueue()
+{
+    DataStructure *ds = currentDataStructureFromTab(tabWidget);
+    if (!ds) return;
+
+    CircularQueue *queue = qobject_cast<CircularQueue*>(ds);
+    if (!queue) {
+        QMessageBox::warning(this, "操作失败", "当前选中的不是循环队列!");
+        return;
+    }
+
+    bool ok;
+    int value = QInputDialog::getInt(this, "入队操作", "请输入入队值:", 0, -2147483647, 2147483647, 1, &ok);
+    if (ok) {
+        if (queue->isFull()) {
+            QMessageBox::warning(this, "操作失败", "队列已满，无法入队!");
+            return;
+        }
+        queue->enqueue(value);
+    }
+}
+
+// 出队操作
+void MainWindow::onDequeue()
+{
+    DataStructure *ds = currentDataStructureFromTab(tabWidget);
+    if (!ds) return;
+
+    CircularQueue *queue = qobject_cast<CircularQueue*>(ds);
+    if (!queue) {
+        QMessageBox::warning(this, "操作失败", "当前选中的不是循环队列!");
+        return;
+    }
+
+    if (queue->isEmpty()) {
+        QMessageBox::warning(this, "操作失败", "队列为空，无法出队!");
+        return;
+    }
+
+    queue->dequeue();
+}
+
+// 实现自定义容量队列创建函数
+void MainWindow::onNewCustomCapacityQueueInstance()
+{
+    bool ok;
+    int capacity = QInputDialog::getInt(this, "设置队列容量",
+                                        "请输入循环队列容量(1-100):",
+                                        5, 1, 100, 1, &ok);
+    if (!ok) return; // 用户取消输入
+
+    CanvasWidget *canvas = new CanvasWidget(nullptr);
+    // 创建指定容量的循环队列
+    CircularQueue *queue = new CircularQueue(capacity, canvas);
+    canvas->setDataStructure(queue);
+    int idx = tabWidget->addTab(canvas, QString("循环队列_%1(容量%2)").arg(++queueCount).arg(capacity));
+    tabWidget->setCurrentIndex(idx);
+}
+
+
+// ==================== 截图，文件IO以及辅助功能 ====================
 void MainWindow::onScreenshot()
 {
     QWidget *w = tabWidget->currentWidget();
@@ -389,72 +479,3 @@ void MainWindow::onTabCloseRequested(int index)
     delete widget; // 清理画布和数据结构
 }
 
-// 循环队列实例创建
-void MainWindow::onNewCircularQueueInstance()
-{
-    CanvasWidget *canvas = new CanvasWidget(nullptr);
-    CircularQueue *queue = new CircularQueue(5, canvas); // 容量为5的循环队列
-    canvas->setDataStructure(queue);
-    int idx = tabWidget->addTab(canvas, QString("循环队列_%1").arg(++queueCount));
-    tabWidget->setCurrentIndex(idx);
-}
-
-// 入队操作
-void MainWindow::onEnqueue()
-{
-    DataStructure *ds = currentDataStructureFromTab(tabWidget);
-    if (!ds) return;
-
-    CircularQueue *queue = qobject_cast<CircularQueue*>(ds);
-    if (!queue) {
-        QMessageBox::warning(this, "操作失败", "当前选中的不是循环队列!");
-        return;
-    }
-
-    bool ok;
-    int value = QInputDialog::getInt(this, "入队操作", "请输入入队值:", 0, -2147483647, 2147483647, 1, &ok);
-    if (ok) {
-        if (queue->isFull()) {
-            QMessageBox::warning(this, "操作失败", "队列已满，无法入队!");
-            return;
-        }
-        queue->enqueue(value);
-    }
-}
-
-// 出队操作
-void MainWindow::onDequeue()
-{
-    DataStructure *ds = currentDataStructureFromTab(tabWidget);
-    if (!ds) return;
-
-    CircularQueue *queue = qobject_cast<CircularQueue*>(ds);
-    if (!queue) {
-        QMessageBox::warning(this, "操作失败", "当前选中的不是循环队列!");
-        return;
-    }
-
-    if (queue->isEmpty()) {
-        QMessageBox::warning(this, "操作失败", "队列为空，无法出队!");
-        return;
-    }
-
-    queue->dequeue();
-}
-
-// 实现自定义容量队列创建函数
-void MainWindow::onNewCustomCapacityQueueInstance()
-{
-    bool ok;
-    int capacity = QInputDialog::getInt(this, "设置队列容量", 
-                                        "请输入循环队列容量(1-100):", 
-                                        5, 1, 100, 1, &ok);
-    if (!ok) return; // 用户取消输入
-
-    CanvasWidget *canvas = new CanvasWidget(nullptr);
-    // 创建指定容量的循环队列
-    CircularQueue *queue = new CircularQueue(capacity, canvas); 
-    canvas->setDataStructure(queue);
-    int idx = tabWidget->addTab(canvas, QString("循环队列_%1(容量%2)").arg(++queueCount).arg(capacity));
-    tabWidget->setCurrentIndex(idx);
-}
